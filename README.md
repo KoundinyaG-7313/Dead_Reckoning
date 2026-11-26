@@ -12,10 +12,8 @@ You are the relief keeper of **Harrow Point Lighthouse**, surviving each night u
 - **VCS:** Git + Git LFS
 
 ## Repository Layout
-- `Assets/_Project/` — All game-owned scenes, scripts, prefabs, materials, audio, data, and UI
-- `Assets/ThirdParty/` — External SDKs / plugins (e.g., Steam Audio)
+- `Dead-Reckoning/` — Unity 6 (`6.6`) HDRP project root (`Assets/`, `Packages/`, `ProjectSettings/`)
+  - `Dead-Reckoning/Assets/_Project/` — All game-owned scenes, scripts, prefabs, materials, audio, data, and UI
+  - `Dead-Reckoning/Assets/ThirdParty/` — External SDKs / plugins (e.g., Steam Audio)
 - `SourceAssets/` — Raw `.blend`, texture source, and DAW project files (excluded from Unity import, tracked via Git LFS)
 - `Docs/` — Design brief, technical budget, and setup checklists
-
-## First-Time Unity 6.6 Initialization
-Because this repository already exists on disk, Unity Hub will not create a brand-new project directly inside `/home/koundinyag/DeadReckoning`. Follow [Docs/SETUP.md](Docs/SETUP.md) to generate the HDRP template in a temporary folder and merge `Packages/`, `ProjectSettings/`, and base HDRP `Assets/` cleanly into this repository.
