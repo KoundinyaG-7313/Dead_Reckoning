@@ -1,19 +1,22 @@
-# Dead Reckoning (Working Title)
+# DeadReckoning — Night Forest World Generation
 
-Solo first-person horror game built for Hack Club's **Taiyaki** event.
+A dense, atmospheric nocturnal horror woodland environment built in **Godot 4.7.2 (Forward+)** using 100% downloaded **CC0 3D models and 1K PBR textures** (Quaternius, Poly Haven, and Kenney Nature Kit).
 
-You are the relief keeper of **Harrow Point Lighthouse**, surviving each night until the dawn horn sounds. The previous keeper vanished, leaving torn instructions—and the ships creeping through the fog are not looking for rescue.
+> **Scope:** World generation and environmental storytelling only — no player controller, HUD, AI enemies, or gameplay loop yet.
 
-## Tech Stack
-- **Engine:** Unity 6 LTS (`6.6`), High Definition Render Pipeline (HDRP), C#
-- **Lighting & Look:** Low-poly gritty aesthetic; baked lighting (Adaptive Probe Volumes), SSGI, SSAO, SSR, volumetric fog, HDRP Water, and realtime lights strictly for the lighthouse beam, flashlight, and flickering lamps (**no ray tracing**)
-- **Audio:** Custom SFX + layered music stems, binaural spatial audio (Steam Audio, pending Unity 6 verification)
-- **Targets:** Windows + Linux (`1080p` Low @ `30 FPS` min spec on GTX 1050 / MX450, 4 cores, 8 GB RAM)
-- **VCS:** Git + Git LFS
+## Scene & Scripts Layout
 
-## Repository Layout
-- `Dead-Reckoning/` — Unity 6 (`6.6`) HDRP project root (`Assets/`, `Packages/`, `ProjectSettings/`)
-  - `Dead-Reckoning/Assets/_Project/` — All game-owned scenes, scripts, prefabs, materials, audio, data, and UI
-  - `Dead-Reckoning/Assets/ThirdParty/` — External SDKs / plugins (e.g., Steam Audio)
-- `SourceAssets/` — Raw `.blend`, texture source, and DAW project files (excluded from Unity import, tracked via Git LFS)
-- `Docs/` — Design brief, technical budget, and setup checklists
+- **`scenes/ForestWorld.tscn`** — Main procedural forest world scene with `ForestWorldBuilder` (`@tool` + runtime generation), volumetric fog night `WorldEnvironment`, directional moonlight, and `StaticForestCamera` + inspection `Marker3D` viewpoints under `CameraViewpoints/`.
+- **`scripts/world/forest_noise.gd` (`ForestTerrainData`)** — Deterministic seeded terrain heightfield (`world_seed`), serpentine logging dirt trail with wheel ruts, off-trail spur path, sunken woodland creek channel, and flattened pads for the Forestry Relay Outpost and Abandoned Campsite.
+- **`shaders/forest_terrain.gdshader`** & **`scripts/world/forest_mesh_builder.gd` (`ForestMeshBuilder`)** — 216x216 subdivided terrain mesh with trimesh collision, 3-layer PBR texture splatting (`forest_ground_04`, `brown_mud_02`, `forest_leaves_04` Diffuse + Normal + ARM), wet rut/creek roughness modulation, and dark creek water ribbon.
+- **`scripts/world/forest_materials.gd` (`ForestMaterials`)** — PBR material loaders and nocturnal tree/foliage shaders with alpha-scissor cutouts and bark normal maps.
+- **`scripts/world/forest_foliage_scatter.gd` (`ForestFoliageScatter`)** — GPU-instanced `MultiMeshInstance3D` scattering for conifers, hardwoods, birches, deadwood, bushes, twisted scrub, ferns, low twigs, tall grass tufts, moss clumps, boulders, rocks, fallen trunks, stumps, roots, and dry branches, with selective trunk colliders.
+- **`scripts/world/forest_landmarks.gd` (`ForestLandmarks`)** — Hand-crafted *Signal Lost*-inspired landmarks:
+  - Timber creek culvert bridge (`bridge_wood.glb`, pilings, warning sign, split-rail fencing)
+  - Creosote utility power line with catenary cables, a splintered leaning pole, dangling cable spark, and storm lanterns
+  - **Forestry Signal Relay Outpost** featuring a 29m steel-lattice radio tower with pulsing crimson beacon & standing tripod floodlights, plus a dilapidated wooden relay shack (`brown_planks_03`, `corrugated_iron_02`, `concrete_moss`) with ajar door and detailed desk/cassette recorder/chair/crowbar/caged light interior
+  - **Overgrown Abandoned Campsite** with weathered open tent, stone/charcoal ember firepit, firewood bench, drum, and tipped storm lantern
+
+## Assets & Licensing
+
+See [`Docs/ASSET_LICENSES.md`](Docs/ASSET_LICENSES.md) for the full CC0 inventory.

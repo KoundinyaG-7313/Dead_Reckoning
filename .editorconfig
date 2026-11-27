@@ -6,11 +6,11 @@ end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[*.{cs,shader,hlsl,cginc,compute}]
-indent_style = space
+[*.{gd,gdshader}]
+indent_style = tab
 indent_size = 4
 
-[*.{json,yml,yaml,asmdef,asmref,uxml,uss}]
+[*.{json,yml,yaml}]
 indent_style = space
 indent_size = 2
 
