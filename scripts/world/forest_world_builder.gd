@@ -3,6 +3,7 @@ class_name ForestWorldBuilder
 extends Node3D
 
 @export var world_seed: int = 4041994
+@export var spawn_player: bool = true
 @export var rebuild_in_editor: bool = false:
 	set(val):
 		rebuild_in_editor = false
@@ -32,6 +33,8 @@ func generate_world() -> Dictionary:
 	_animated = ForestLandmarks.build_all(_terrain, self)
 
 	_build_inspection_viewpoints()
+	if spawn_player and not Engine.is_editor_hint():
+		_spawn_player_character()
 	_generated = true
 
 	if not Engine.is_editor_hint():
@@ -148,7 +151,7 @@ func _build_inspection_viewpoints() -> void:
 	cam.fov = 62.0
 	cam.far = 260.0
 	cam.position = Vector3(trail_x - 0.6, trail_y + 2.35, trail_z)
-	cam.current = true
+	cam.current = not (spawn_player and not Engine.is_editor_hint())
 	add_child(cam)
 	cam.look_at(Vector3(bridge_x, _terrain.get_height(bridge_x, 34.0) + 2.4, 30.0), Vector3.UP)
 
@@ -166,6 +169,24 @@ func _build_inspection_viewpoints() -> void:
 		node.position = m["pos"]
 		vp_root.add_child(node)
 		node.look_at(m["look"], Vector3.UP)
+
+
+func _spawn_player_character() -> void:
+	var player_ps: PackedScene = load("res://scenes/PlayerCharacter.tscn")
+	if player_ps == null:
+		push_error("[ForestWorld] Failed to load PlayerCharacter.tscn")
+		return
+	var player: ThirdPersonPlayer = player_ps.instantiate() as ThirdPersonPlayer
+	var spawn_z: float = 50.0
+	var spawn_x: float = _terrain.get_trail_center_x(spawn_z)
+	var spawn_y: float = _terrain.get_height(spawn_x, spawn_z) + 0.05
+	var ahead_z: float = 42.0
+	var ahead_x: float = _terrain.get_trail_center_x(ahead_z)
+	var yaw: float = atan2(-(ahead_x - spawn_x), -(ahead_z - spawn_z))
+
+	player.position = Vector3(spawn_x, spawn_y, spawn_z)
+	add_child(player)
+	player.set_initial_heading(yaw)
 
 
 func _process(delta: float) -> void:

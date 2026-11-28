@@ -28,8 +28,10 @@ static func build_all(terrain: ForestTerrainData, parent: Node3D) -> Dictionary:
 static func _build_creek_bridge_and_signs(terrain: ForestTerrainData, parent: Node3D, _animated: Dictionary) -> void:
 	var bz: float = ForestTerrainData.CREEK_Z_BASE
 	var bx: float = terrain.get_trail_center_x(bz)
-	var dx_dz: float = (terrain.get_trail_center_x(bz + 1.0) - terrain.get_trail_center_x(bz - 1.0)) * 0.5
-	var deck_y: float = terrain.get_creek_water_level() + 1.08
+	var dx_dz: float = (terrain.get_trail_center_x(bz + 2.0) - terrain.get_trail_center_x(bz - 2.0)) * 0.25
+	var south_bank_y: float = terrain.get_height(terrain.get_trail_center_x(bz + 6.4), bz + 6.4)
+	var north_bank_y: float = terrain.get_height(terrain.get_trail_center_x(bz - 6.4), bz - 6.4)
+	var deck_y: float = maxf(terrain.get_creek_water_level() + 0.85, maxf(south_bank_y, north_bank_y) + 0.18)
 
 	var bridge_root := Node3D.new()
 	bridge_root.name = "CreekTimberBridge"
@@ -37,38 +39,92 @@ static func _build_creek_bridge_and_signs(terrain: ForestTerrainData, parent: No
 	bridge_root.rotation.y = atan2(dx_dz, 1.0)
 	parent.add_child(bridge_root)
 
-	var mat_planks: StandardMaterial3D = ForestMaterials.load_pbr_material("brown_planks_03", Vector2(2.0, 2.0), Color(0.58, 0.56, 0.54))
-	var mat_bark: StandardMaterial3D = ForestMaterials.load_pbr_material("knotted_pine_bark", Vector2(1.5, 2.5), Color(0.48, 0.45, 0.44))
-	var mat_moss_stone: StandardMaterial3D = ForestMaterials.load_pbr_material("concrete_moss", Vector2(1.5, 1.5), Color(0.54, 0.56, 0.54))
+	var mat_planks: StandardMaterial3D = ForestMaterials.load_pbr_material("brown_planks_03", Vector2(2.0, 2.0), Color(0.64, 0.60, 0.56))
+	var mat_bark: StandardMaterial3D = ForestMaterials.load_pbr_material("knotted_pine_bark", Vector2(1.5, 2.5), Color(0.50, 0.47, 0.45))
 
-	# Twin scaled Kenney bridge sections overridden with high-res Poly Haven PBR materials
-	var bridge_ps: PackedScene = load(KENNEY_BASE + "bridge_wood.glb")
-	if bridge_ps != null:
-		for z_off in [-1.85, 1.85]:
-			var b: Node3D = bridge_ps.instantiate() as Node3D
-			b.position = Vector3(0.0, -0.15, z_off)
-			b.scale = Vector3(3.8, 3.4, 3.6)
-			_override_kenney_materials(b, {
-				"woodBark": mat_bark,
-				"wood": mat_planks,
-				"stone": mat_moss_stone
-			})
-			bridge_root.add_child(b)
+	const BR_W: float = 3.8
+	const BR_L: float = 7.6
 
-	# Heavy timber abutment pilings driven down into creek mud (no gaps!)
-	for x_side in [-1.75, 1.75]:
-		for z_pier in [-3.4, -1.2, 1.2, 3.4]:
-			var pier := _make_cylinder_mesh(0.14, 2.8, mat_bark)
-			pier.position = Vector3(x_side, -1.15, z_pier)
+	# Walkable weathered timber plank bridge deck (100% open at -Z and +Z ends!)
+	var main_deck := _make_box_mesh(Vector3(BR_W, 0.18, BR_L), mat_planks)
+	main_deck.position = Vector3(0.0, -0.09, 0.0)
+	bridge_root.add_child(main_deck)
+
+	# Heavy longitudinal under-beams supporting the deck
+	for x_beam in [-1.55, 0.0, 1.55]:
+		var beam := _make_box_mesh(Vector3(0.24, 0.28, BR_L + 0.4), mat_bark)
+		beam.position = Vector3(x_beam, -0.30, 0.0)
+		bridge_root.add_child(beam)
+
+	# Ground-anchored plank ramps extending from bridge deck lips cleanly into terrain mud (-0.18m embed)
+	for end_sign in [-1.0, 1.0]:
+		var local_lip := Vector3(0.0, 0.0, end_sign * (BR_L * 0.5))
+		var tip_world_approx: Vector3 = bridge_root.position + (Basis(Vector3.UP, bridge_root.rotation.y) * Vector3(0.0, 0.0, end_sign * (BR_L * 0.5 + 2.8)))
+		var tip_ground_y: float = terrain.get_height(tip_world_approx.x, tip_world_approx.z) - 0.18
+		var local_tip_y: float = tip_ground_y - deck_y
+		var local_tip := Vector3(0.0, local_tip_y, end_sign * (BR_L * 0.5 + 2.8))
+		var delta_v: Vector3 = local_tip - local_lip
+		var ramp_len: float = delta_v.length()
+		var slope_pitch: float = atan2(local_tip_y, 2.8) * (-end_sign)
+
+		var ramp := _make_box_mesh(Vector3(BR_W, 0.18, ramp_len + 0.15), mat_planks)
+		ramp.position = (local_lip + local_tip) * 0.5 + Vector3(0.0, -0.09, 0.0)
+		ramp.rotation.x = slope_pitch
+		bridge_root.add_child(ramp)
+
+		var ramp_body := StaticBody3D.new()
+		var ramp_col := CollisionShape3D.new()
+		var ramp_box := BoxShape3D.new()
+		ramp_box.size = Vector3(BR_W, 0.22, ramp_len + 0.2)
+		ramp_col.shape = ramp_box
+		ramp_col.position = ramp.position
+		ramp_col.rotation = ramp.rotation
+		ramp_body.add_child(ramp_col)
+		bridge_root.add_child(ramp_body)
+
+	# Side log curbs + waist-high open timber guardrails ONLY along left & right sides
+	for side_x in [-BR_W * 0.5 + 0.12, BR_W * 0.5 - 0.12]:
+		var curb := _make_box_mesh(Vector3(0.20, 0.16, BR_L), mat_bark)
+		curb.position = Vector3(side_x, 0.08, 0.0)
+		bridge_root.add_child(curb)
+
+		var top_rail := _make_box_mesh(Vector3(0.11, 0.10, BR_L + 0.2), mat_planks)
+		top_rail.position = Vector3(side_x, 0.94, 0.0)
+		bridge_root.add_child(top_rail)
+
+		var mid_rail := _make_box_mesh(Vector3(0.09, 0.08, BR_L + 0.2), mat_planks)
+		mid_rail.position = Vector3(side_x, 0.52, 0.0)
+		bridge_root.add_child(mid_rail)
+
+		for pz in [-3.8, -1.9, 0.0, 1.9, 3.8]:
+			var rpost := _make_box_mesh(Vector3(0.14, 1.05, 0.14), mat_bark)
+			rpost.position = Vector3(side_x, 0.52, pz)
+			bridge_root.add_child(rpost)
+
+		# Side railing collider
+		var rail_sb := StaticBody3D.new()
+		var rail_cs := CollisionShape3D.new()
+		var rail_bs := BoxShape3D.new()
+		rail_bs.size = Vector3(0.24, 1.05, BR_L + 0.2)
+		rail_cs.shape = rail_bs
+		rail_cs.position = Vector3(side_x, 0.52, 0.0)
+		rail_sb.add_child(rail_cs)
+		bridge_root.add_child(rail_sb)
+
+	# Deep timber pilings driven 3.8m straight into the muddy creek ravine (zero floating!)
+	for x_side in [-1.68, 1.68]:
+		for z_pier in [-3.6, -1.2, 1.2, 3.6]:
+			var pier := _make_cylinder_mesh(0.16, 4.0, mat_bark)
+			pier.position = Vector3(x_side, -2.05, z_pier)
 			bridge_root.add_child(pier)
 
-	# Bridge static collider deck
+	# Bridge static collider deck (flush with top plank surface at y = 0.0)
 	var deck_body := StaticBody3D.new()
 	var deck_col := CollisionShape3D.new()
 	var deck_box := BoxShape3D.new()
-	deck_box.size = Vector3(3.8, 0.4, 7.6)
+	deck_box.size = Vector3(BR_W, 0.22, BR_L)
 	deck_col.shape = deck_box
-	deck_col.position = Vector3(0.0, -0.08, 0.0)
+	deck_col.position = Vector3(0.0, -0.11, 0.0)
 	deck_body.add_child(deck_col)
 	bridge_root.add_child(deck_body)
 
@@ -82,7 +138,8 @@ static func _build_creek_bridge_and_signs(terrain: ForestTerrainData, parent: No
 		snode.position = Vector3(sx, terrain.get_height(sx, sz) - 0.05, sz)
 		snode.scale = Vector3.ONE * 3.1
 		snode.rotation = Vector3(0.04, -0.55, 0.05)
-		_override_kenney_materials(snode, {"wood": mat_planks, "woodDark": mat_bark, "_defaultMat": mat_moss_stone})
+		var mat_sign_stone: StandardMaterial3D = ForestMaterials.load_pbr_material("concrete_moss", Vector2(1.5, 1.5), Color(0.54, 0.56, 0.54))
+		_override_kenney_materials(snode, {"wood": mat_planks, "woodDark": mat_bark, "_defaultMat": mat_sign_stone})
 		parent.add_child(snode)
 
 	# Split-rail fence guards near the spur trail fork (z ~ 16)

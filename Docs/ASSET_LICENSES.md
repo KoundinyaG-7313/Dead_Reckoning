@@ -15,3 +15,7 @@ All third-party 3D models and PBR textures in `assets/` are released under **CC0
 3. **Kenney — Nature Kit (3D GLB Props)**
    - Camp & trail props (`assets/models/kenney/`): `campfire_stones`, `campfire_logs`, `tent_smallOpen`, `fence_planks`, `fence_simple`, `sign`, `log_stackLarge`, `bridge_wood`.
    - License: CC0 1.0 Universal (`kenney.nl/assets/nature-kit`).
+
+4. **MakeHuman System Assets / CharacterCreator Pipeline — High-Poly Rigged Human & Clothing**
+   - `assets/characters/`: `base_body_anim.glb`, `clothing_shirt.glb`, `clothing_jacket.glb`, `clothing_jeans.glb`, `clothing_boots.glb`, `hair_short04.glb` (`asset_licenses.json`, `clothing.json`).
+   - License: CC0 1.0 Universal (MakeHuman community assets via `kblood/CharacterCreator`, dequantized & `_CCZONE`-culled for Godot 4 Forward+).

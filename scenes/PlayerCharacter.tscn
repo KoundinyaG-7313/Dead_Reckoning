@@ -1,0 +1,55 @@
+[gd_scene load_steps=4 format=3 uid="uid://b7k3playerchar"]
+
+[ext_resource type="Script" path="res://scripts/player/third_person_player.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/player/character_rig.gd" id="2_rig"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
+radius = 0.33
+height = 1.72
+
+[node name="PlayerCharacter" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.86, 0)
+shape = SubResource("CapsuleShape3D_body")
+
+[node name="CharacterRig" type="Node3D" parent="."]
+script = ExtResource("2_rig")
+
+[node name="CameraPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.48, 0)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot"]
+position = Vector3(0.46, 0.14, 0)
+collision_mask = 1
+spring_length = 2.35
+margin = 0.24
+
+[node name="ThirdPersonCamera" type="Camera3D" parent="CameraPivot/SpringArm3D"]
+current = true
+fov = 60.0
+far = 260.0
+
+[node name="FlashlightMount" type="Node3D" parent="."]
+top_level = true
+
+[node name="ExplorerFlashlight" type="SpotLight3D" parent="FlashlightMount"]
+light_color = Color(0.95, 0.96, 1, 1)
+light_energy = 5.4
+light_volumetric_fog_energy = 2.2
+shadow_enabled = true
+shadow_bias = 0.04
+spot_range = 38.0
+spot_attenuation = 1.25
+spot_angle = 29.0
+spot_angle_attenuation = 0.72
+
+[node name="SkyAmbientBounce" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, -0.55)
+light_color = Color(0.65, 0.75, 0.9, 1)
+light_energy = 0.38
+omni_range = 2.4
+omni_attenuation = 1.2
