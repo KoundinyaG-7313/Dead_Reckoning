@@ -63,6 +63,16 @@ func set_initial_heading(yaw_rad: float) -> void:
 		camera_pivot.rotation = Vector3(_pitch, _yaw, 0.0)
 
 
+func apply_origin_shift(shift_vec: Vector3) -> void:
+	global_position -= shift_vec
+	if camera_pivot != null:
+		camera_pivot.global_position -= shift_vec
+	if flashlight != null:
+		var mount: Node3D = flashlight.get_parent() as Node3D
+		if mount != null and mount.top_level:
+			mount.global_position -= shift_vec
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		if _mouse_warp_skip > 0:

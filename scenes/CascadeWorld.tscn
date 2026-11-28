@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://c32k_cascadeworld"]
+
+[ext_resource type="Script" path="res://scripts/world/cascade_world_builder.gd" id="1_cascade"]
+
+[node name="CascadeWorld" type="Node3D"]
+script = ExtResource("1_cascade")
+world_seed = 4041994

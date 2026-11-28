@@ -2,6 +2,7 @@ class_name ForestLandmarks
 extends RefCounted
 
 const PROPS_BASE: String = "res://assets/models/props/"
+const PROPS_HD_BASE: String = "res://assets/models/props_hd/"
 const KENNEY_BASE: String = "res://assets/models/kenney/"
 
 
@@ -127,7 +128,7 @@ static func _build_creek_bridge_and_signs(terrain: ForestTerrainData, parent: No
 		var sz: float = 40.5
 		var snode: Node3D = sign_ps.instantiate() as Node3D
 		snode.name = "BridgeWarningSign"
-		snode.position = Vector3(sx, terrain.get_height(sx, sz) - 0.05, sz)
+		snode.position = Vector3(sx, terrain.get_height(sx, sz) + 0.11, sz)
 		snode.scale = Vector3.ONE * 3.1
 		snode.rotation = Vector3(0.04, -0.55, 0.05)
 		var mat_sign_stone: StandardMaterial3D = ForestMaterials.load_pbr_material("concrete_moss", Vector2(1.5, 1.5), Color(0.54, 0.56, 0.54))
@@ -139,7 +140,7 @@ static func _build_creek_bridge_and_signs(terrain: ForestTerrainData, parent: No
 		for fz in [26.5, 29.5, 17.5]:
 			var fx: float = terrain.get_trail_center_x(fz) - 2.65
 			var fnode: Node3D = fence_ps.instantiate() as Node3D
-			fnode.position = Vector3(fx, terrain.get_height(fx, fz) - 0.08, fz)
+			fnode.position = Vector3(fx, terrain.get_height(fx, fz) + 0.08, fz)
 			fnode.scale = Vector3.ONE * 2.8
 			fnode.rotation.y = PI * 0.46
 			_override_kenney_materials(fnode, {"wood": mat_planks})
@@ -156,6 +157,10 @@ static func _build_utility_power_line(terrain: ForestTerrainData, parent: Node3D
 	var mat_iron: StandardMaterial3D = ForestMaterials.build_dark_metal_material(Color(0.18, 0.20, 0.21), 0.72, 0.85)
 	var mat_cable: StandardMaterial3D = ForestMaterials.build_dark_metal_material(Color(0.04, 0.04, 0.05), 0.85, 0.4)
 
+	var poles_gltf: String = PROPS_HD_BASE + "modular_electricity_poles/modular_electricity_poles.gltf"
+	var hd_pole_std: ArrayMesh = ForestMaterials.extract_gltf_kit_mesh(poles_gltf, ["preset_02_*"], Vector3(-4.5, 0.0, 0.0), false, true, 0.25)
+	var hd_pole_xf: ArrayMesh = ForestMaterials.extract_gltf_kit_mesh(poles_gltf, ["preset_03_*"], Vector3(-6.5, 0.0, 0.0), false, true, 0.25)
+
 	var z_stations: Array[float] = [88.0, 62.0, 39.5, 11.5, -13.5, -29.0]
 	var pole_tops_l: Array[Vector3] = []
 	var pole_tops_r: Array[Vector3] = []
@@ -171,29 +176,40 @@ static func _build_utility_power_line(terrain: ForestTerrainData, parent: Node3D
 		var py: float = terrain.get_height(px, pz)
 		var pole := Node3D.new()
 		pole.name = "UtilityPole_%d" % idx
-		pole.position = Vector3(px, py - 0.35, pz)
+		pole.position = Vector3(px, py - 0.15, pz)
 
 		var yaw: float = atan2(terrain.get_trail_center_x(pz - 1.0) - terrain.get_trail_center_x(pz + 1.0), -2.0)
 		pole.rotation.y = yaw
 
-		var h: float = 8.8
 		var is_broken: bool = (idx == 3)
 		if is_broken:
 			pole.rotation.z = -0.34
 			pole.rotation.x = 0.08
 
-		var shaft := _make_cylinder_mesh(0.145, h, mat_pole)
-		shaft.position = Vector3(0.0, h * 0.5, 0.0)
-		pole.add_child(shaft)
-
-		var arm := _make_box_mesh(Vector3(1.9, 0.14, 0.14), mat_arm)
-		arm.position = Vector3(0.0, h - 0.55, 0.0)
-		pole.add_child(arm)
-
-		for s in [-0.78, 0.78]:
-			var ins := _make_cylinder_mesh(0.055, 0.14, mat_iron)
-			ins.position = Vector3(s, h - 0.42, 0.0)
-			pole.add_child(ins)
+		var pole_sc: float = 1.38
+		var use_mesh: ArrayMesh = hd_pole_xf if ((idx == 3 or idx == 5) and hd_pole_xf != null) else hd_pole_std
+		var wire_h: float = 7.55
+		var arm_span: float = 0.68
+		if use_mesh != null:
+			var pmi := MeshInstance3D.new()
+			pmi.mesh = use_mesh
+			pmi.scale = Vector3.ONE * pole_sc
+			pmi.gi_mode = GeometryInstance3D.GI_MODE_STATIC
+			pole.add_child(pmi)
+		else:
+			var h: float = 8.8
+			wire_h = h - 0.36
+			arm_span = 0.78
+			var shaft := _make_cylinder_mesh(0.145, h, mat_pole)
+			shaft.position = Vector3(0.0, h * 0.5, 0.0)
+			pole.add_child(shaft)
+			var arm := _make_box_mesh(Vector3(1.9, 0.14, 0.14), mat_arm)
+			arm.position = Vector3(0.0, h - 0.55, 0.0)
+			pole.add_child(arm)
+			for s in [-0.78, 0.78]:
+				var ins := _make_cylinder_mesh(0.055, 0.14, mat_iron)
+				ins.position = Vector3(s, h - 0.42, 0.0)
+				pole.add_child(ins)
 
 		var pb := StaticBody3D.new()
 		var pc := CollisionShape3D.new()
@@ -208,8 +224,8 @@ static func _build_utility_power_line(terrain: ForestTerrainData, parent: Node3D
 		pole_parent.add_child(pole)
 
 		var xf: Transform3D = pole.transform
-		pole_tops_l.append(xf * Vector3(-0.78, h - 0.36, 0.0))
-		pole_tops_r.append(xf * Vector3(0.78, h - 0.36, 0.0))
+		pole_tops_l.append(xf * Vector3(-arm_span, wire_h, 0.0))
+		pole_tops_r.append(xf * Vector3(arm_span, wire_h, 0.0))
 
 		if is_broken:
 			var hb := _place_gltf_prop(PROPS_BASE + "Barrel_01/Barrel_01.gltf", parent, "HazardBarrel_Pole3", Vector3(px + 1.2, terrain.get_height(px + 1.2, pz - 1.1) - 0.02, pz - 1.1), Vector3(0.0, 0.8, 0.12), Vector3.ONE * 1.15)
@@ -481,11 +497,14 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 	chimney.position = Vector3(-1.4, H + 0.85, -1.1)
 	shack.add_child(chimney)
 
-	_place_gltf_prop(PROPS_BASE + "WoodenTable_01/WoodenTable_01.gltf", shack, "OperatorDesk", Vector3(0.95, 0.12, 0.10), Vector3(0.0, 0.05, 0.0), Vector3.ONE * 1.22)
-	var desk_top_y: float = 0.79
-	_place_gltf_prop(PROPS_BASE + "cassette_player/cassette_player.gltf", shack, "SignalRecorderDeck", Vector3(0.85, desk_top_y, 0.15), Vector3(0.0, 0.42, 0.0), Vector3.ONE * 1.45)
-	_place_gltf_prop(PROPS_BASE + "ammo_box/ammo_box.gltf", shack, "RelaySupplyBox", Vector3(1.50, desk_top_y, 0.05), Vector3(0.0, -0.55, 0.0), Vector3.ONE * 1.35)
-	_place_gltf_prop(PROPS_BASE + "WoodenChair_01/WoodenChair_01.gltf", shack, "OperatorChair", Vector3(0.85, 0.12, -0.55), Vector3(0.0, 0.25, 0.0), Vector3.ONE * 0.44)
+	_place_gltf_prop(PROPS_BASE + "WoodenTable_01/WoodenTable_01.gltf", shack, "OperatorDesk", Vector3(0.95, 0.125, 0.10), Vector3(0.0, 0.05, 0.0), Vector3.ONE * 1.22)
+	var desk_top_y: float = 0.795
+	_place_gltf_prop(PROPS_HD_BASE + "vintage_radio_transceiver/vintage_radio_transceiver.gltf", shack, "OperatorTransceiver", Vector3(0.32, desk_top_y, 0.08), Vector3(0.0, -0.35, 0.0), Vector3.ONE * 1.05)
+	_place_gltf_prop(PROPS_BASE + "cassette_player/cassette_player.gltf", shack, "SignalRecorderDeck", Vector3(0.92, desk_top_y, 0.16), Vector3(0.0, 0.42, 0.0), Vector3.ONE * 1.35)
+	_place_gltf_prop(PROPS_HD_BASE + "vintage_oil_lamp/vintage_oil_lamp.gltf", shack, "DeskOilLamp", Vector3(0.12, desk_top_y, -0.14), Vector3.ZERO, Vector3.ONE * 0.65)
+	_place_gltf_prop(PROPS_BASE + "ammo_box/ammo_box.gltf", shack, "RelaySupplyBox", Vector3(1.50, desk_top_y, 0.05), Vector3(0.0, -0.55, 0.0), Vector3.ONE * 1.32)
+	_place_gltf_prop(PROPS_BASE + "WoodenChair_01/WoodenChair_01.gltf", shack, "OperatorChair", Vector3(0.85, 0.125, -0.58), Vector3(0.0, 0.25, 0.0), Vector3.ONE * 0.36)
+	_place_gltf_prop(PROPS_HD_BASE + "medical_box/medical_box.gltf", shack, "ShackFirstAid", Vector3(-1.5, 0.125, -1.1), Vector3(0.0, 0.5, 0.0), Vector3.ONE)
 	_place_gltf_prop(PROPS_BASE + "crowbar_01/crowbar_01.gltf", shack, "PriedDoorCrowbar", Vector3(-0.24, 0.42, D * 0.5 - 0.18), Vector3(0.16, 0.25, -0.22), Vector3.ONE * 1.25)
 
 	var cage_ps: PackedScene = load(PROPS_BASE + "caged_hanging_light/caged_hanging_light.gltf")
@@ -517,29 +536,35 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 		porch_hook.add_child(pl)
 		animated["swaying_lanterns"].append({"node": porch_hook, "speed": 1.35, "amp": 0.055, "phase": 2.9})
 
-	var ob1 := _place_gltf_prop(PROPS_BASE + "Barrel_01/Barrel_01.gltf", shack, "OutpostFuelDrum_A", Vector3(-W * 0.5 - 0.55, 0.12, -0.65), Vector3(0.0, 0.9, 0.0), Vector3.ONE * 1.15)
+	var ob1 := _place_gltf_prop(PROPS_BASE + "Barrel_01/Barrel_01.gltf", shack, "OutpostFuelDrum_A", Vector3(-W * 0.5 - 0.55, 0.05, -0.65), Vector3(0.0, 0.9, 0.0), Vector3.ONE * 1.15)
 	if ob1 != null:
 		_tint_gltf_prop(ob1, 0.45)
-	_place_gltf_prop(PROPS_BASE + "barrel_03/barrel_03.gltf", shack, "OutpostRustedDrum_B", Vector3(-W * 0.5 - 0.65, 0.12, 0.25), Vector3(0.0, 2.2, 0.0), Vector3.ONE * 1.12)
+	_place_gltf_prop(PROPS_BASE + "barrel_03/barrel_03.gltf", shack, "OutpostRustedDrum_B", Vector3(-W * 0.5 - 0.65, 0.05, 0.25), Vector3(0.0, 2.2, 0.0), Vector3.ONE * 1.12)
+	_place_gltf_prop(PROPS_HD_BASE + "portable_generator/portable_generator.gltf", shack, "OutpostGenerator", Vector3(-W * 0.5 - 1.15, 0.04, 1.35), Vector3(0.0, 0.65, 0.0), Vector3.ONE * 1.25)
+	_place_gltf_prop(PROPS_HD_BASE + "power_box_01/power_box_01.gltf", shack, "OutpostPowerBox", Vector3(W * 0.5 + 0.13, 1.45, -0.35), Vector3(0.0, PI * 0.5, 0.0), Vector3.ONE * 1.2)
+	_place_gltf_prop(PROPS_HD_BASE + "metal_toolbox/metal_toolbox.gltf", shack, "OutpostToolbox", Vector3(-W * 0.5 - 0.85, 0.04, 2.15), Vector3(0.0, 1.1, 0.0), Vector3.ONE * 1.15)
+	_place_gltf_prop(PROPS_HD_BASE + "wooden_military_crate/wooden_military_crate.gltf", out_root, "OutpostTowerCrate", Vector3(ForestTerrainData.RELAY_CENTER.x + 2.4, terrain.get_height(ForestTerrainData.RELAY_CENTER.x + 2.4, ForestTerrainData.RELAY_CENTER.y - 4.2), ForestTerrainData.RELAY_CENTER.y - 4.2), Vector3(0.0, -0.4, 0.0), Vector3.ONE * 0.85)
+	_place_gltf_prop(PROPS_HD_BASE + "utility_box_01/utility_box_01.gltf", out_root, "OutpostUtilityBox", Vector3(ForestTerrainData.RELAY_CENTER.x + 7.2, terrain.get_height(ForestTerrainData.RELAY_CENTER.x + 7.2, ForestTerrainData.RELAY_CENTER.y - 1.6), ForestTerrainData.RELAY_CENTER.y - 1.6), Vector3(0.0, -0.7, 0.0), Vector3.ONE)
 	var log_ps: PackedScene = load(KENNEY_BASE + "log_stackLarge.glb")
 	if log_ps != null:
 		var ls_node: Node3D = log_ps.instantiate() as Node3D
-		ls_node.position = Vector3(W * 0.5 + 0.72, 0.08, -0.35)
+		ls_node.position = Vector3(W * 0.5 + 0.72, 0.16, -0.35)
 		ls_node.scale = Vector3.ONE * 2.8
 		ls_node.rotation.y = PI * 0.52
 		_override_kenney_materials(ls_node, {"woodBark": mat_trim, "woodInner": mat_wood, "woodDark": mat_trim})
 		shack.add_child(ls_node)
 
-	var fence_ps: PackedScene = load(KENNEY_BASE + "fence_planks.glb")
-	if fence_ps != null:
+	var fence_mesh: ArrayMesh = ForestMaterials.extract_gltf_kit_mesh(PROPS_HD_BASE + "modular_chainlink_fence/modular_chainlink_fence.gltf", ["modular_chainlink_fence_double"], Vector3.ZERO, true, true, 0.0)
+	if fence_mesh != null:
 		for f_idx in range(4):
-			var fx: float = ForestTerrainData.RELAY_CENTER.x + 8.8 - float(f_idx) * 2.75
-			var fz: float = ForestTerrainData.RELAY_CENTER.y + 8.5 + float(f_idx) * 0.35
-			var fn: Node3D = fence_ps.instantiate() as Node3D
-			fn.position = Vector3(fx, terrain.get_height(fx, fz) - 0.06, fz)
-			fn.scale = Vector3.ONE * 2.8
-			fn.rotation.y = -0.15
-			_override_kenney_materials(fn, {"wood": mat_wood})
+			var fx: float = ForestTerrainData.RELAY_CENTER.x + 8.8 - float(f_idx) * 1.92
+			var fz: float = ForestTerrainData.RELAY_CENTER.y + 8.5 + float(f_idx) * 0.24
+			var fn := MeshInstance3D.new()
+			fn.mesh = fence_mesh
+			fn.position = Vector3(fx, terrain.get_height(fx, fz), fz)
+			fn.rotation.y = -0.12
+			fn.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			fn.gi_mode = GeometryInstance3D.GI_MODE_STATIC
 			out_root.add_child(fn)
 
 	_add_catenary_cable(out_root, shack_pos + Vector3(1.8, 2.75, 0.2), tower_pos + Vector3(-1.35, 2.4, 0.2), 0.55, 10, ForestMaterials.build_dark_metal_material(Color(0.04, 0.04, 0.05), 0.8, 0.3))
@@ -552,8 +577,8 @@ static func _build_abandoned_campsite(terrain: ForestTerrainData, parent: Node3D
 
 	var c: Vector2 = ForestTerrainData.CAMP_CENTER
 
-	var mat_tent_canvas: StandardMaterial3D = ForestMaterials.build_dark_metal_material(Color(0.20, 0.22, 0.16), 0.92, 0.0)
-	var mat_tent_dark: StandardMaterial3D = ForestMaterials.build_dark_metal_material(Color(0.11, 0.13, 0.10), 0.94, 0.0)
+	var mat_tent_canvas: StandardMaterial3D = ForestMaterials.build_canvas_material(Color(0.20, 0.24, 0.16), Vector2(2.4, 2.4))
+	var mat_tent_dark: StandardMaterial3D = ForestMaterials.build_canvas_material(Color(0.11, 0.14, 0.10), Vector2(2.4, 2.4))
 	var mat_stone: StandardMaterial3D = ForestMaterials.load_pbr_material("concrete_moss", Vector2(1.0, 1.0), Color(0.45, 0.45, 0.45))
 	var mat_char_wood: StandardMaterial3D = ForestMaterials.load_pbr_material("knotted_pine_bark", Vector2(1.0, 1.0), Color(0.24, 0.21, 0.20))
 
@@ -562,7 +587,7 @@ static func _build_abandoned_campsite(terrain: ForestTerrainData, parent: Node3D
 		var tent: Node3D = tent_ps.instantiate() as Node3D
 		var tx: float = c.x + 2.3
 		var tz: float = c.y - 1.6
-		tent.position = Vector3(tx, terrain.get_height(tx, tz) - 0.04, tz)
+		tent.position = Vector3(tx, terrain.get_height(tx, tz) + 0.12, tz)
 		tent.scale = Vector3.ONE * 3.3
 		tent.rotation.y = -0.85
 		_override_kenney_materials(tent, {"colorRed": mat_tent_canvas, "colorRedDark": mat_tent_dark, "wood": mat_char_wood})
@@ -572,13 +597,13 @@ static func _build_abandoned_campsite(terrain: ForestTerrainData, parent: Node3D
 	var logs_ps: PackedScene = load(KENNEY_BASE + "campfire_logs.glb")
 	if stones_ps != null:
 		var st: Node3D = stones_ps.instantiate() as Node3D
-		st.position = Vector3(c.x - 0.6, terrain.get_height(c.x - 0.6, c.y + 0.8) - 0.02, c.y + 0.8)
+		st.position = Vector3(c.x - 0.6, terrain.get_height(c.x - 0.6, c.y + 0.8) + 0.08, c.y + 0.8)
 		st.scale = Vector3.ONE * 2.6
 		_override_kenney_materials(st, {"stone": mat_stone})
 		camp.add_child(st)
 	if logs_ps != null:
 		var lg: Node3D = logs_ps.instantiate() as Node3D
-		lg.position = Vector3(c.x - 0.6, terrain.get_height(c.x - 0.6, c.y + 0.8), c.y + 0.8)
+		lg.position = Vector3(c.x - 0.6, terrain.get_height(c.x - 0.6, c.y + 0.8) + 0.14, c.y + 0.8)
 		lg.scale = Vector3.ONE * 2.6
 		_override_kenney_materials(lg, {"wood": mat_char_wood, "woodDark": mat_char_wood})
 		camp.add_child(lg)
@@ -611,7 +636,7 @@ static func _build_abandoned_campsite(terrain: ForestTerrainData, parent: Node3D
 		var lb: Node3D = log_bench_ps.instantiate() as Node3D
 		var lbx: float = c.x + 2.35
 		var lbz: float = c.y + 1.85
-		lb.position = Vector3(lbx, terrain.get_height(lbx, lbz) - 0.05, lbz)
+		lb.position = Vector3(lbx, terrain.get_height(lbx, lbz) + 0.09, lbz)
 		lb.scale = Vector3.ONE * 2.5
 		lb.rotation.y = -0.82
 		var mat_wb: StandardMaterial3D = ForestMaterials.load_pbr_material("brown_planks_03", Vector2(1.0, 1.0), Color(0.66, 0.62, 0.58))
@@ -619,8 +644,10 @@ static func _build_abandoned_campsite(terrain: ForestTerrainData, parent: Node3D
 		_override_kenney_materials(lb, {"woodBark": mat_bark_camp, "woodInner": mat_wb, "woodDark": mat_bark_camp})
 		camp.add_child(lb)
 
+	_place_gltf_prop(PROPS_HD_BASE + "wooden_military_crate/wooden_military_crate.gltf", camp, "CampSupplyCrate", Vector3(c.x - 1.9, terrain.get_height(c.x - 1.9, c.y + 2.1), c.y + 2.1), Vector3(0.0, 0.55, 0.0), Vector3.ONE * 0.85)
+	_place_gltf_prop(PROPS_HD_BASE + "medical_box/medical_box.gltf", camp, "CampMedKit", Vector3(c.x + 0.9, terrain.get_height(c.x + 0.9, c.y - 0.6), c.y - 0.6), Vector3(0.0, -0.3, 0.0), Vector3.ONE)
 	_place_gltf_prop("res://assets/models/forest/fern_02/fern_02.gltf", camp, "CampOvergrowth_A", Vector3(c.x - 3.9, terrain.get_height(c.x - 3.9, c.y - 0.8), c.y - 0.8), Vector3(0.0, 1.2, 0.0), Vector3.ONE * 1.4)
-	_place_gltf_prop("res://assets/models/forest/tree_stump_01/tree_stump_01.gltf", camp, "CampStump", Vector3(c.x + 3.2, terrain.get_height(c.x + 3.2, c.y - 0.2) - 0.12, c.y - 0.2), Vector3(0.0, 0.7, 0.0), Vector3.ONE * 1.15)
+	_place_gltf_prop("res://assets/models/forest/tree_stump_01/tree_stump_01.gltf", camp, "CampStump", Vector3(c.x + 3.2, terrain.get_height(c.x + 3.2, c.y - 0.2) - 0.04, c.y - 0.2), Vector3(0.0, 0.7, 0.0), Vector3.ONE * 1.15)
 
 
 static func _place_standing_floodlight(
@@ -631,29 +658,17 @@ static func _place_standing_floodlight(
 	energy: float,
 	cast_shadow: bool = false
 ) -> void:
-	var ps: PackedScene = load(PROPS_BASE + "flood_lights/flood_lights.gltf")
-	if ps == null:
-		return
 	var holder := Node3D.new()
 	holder.name = "TowerFloodLight"
 	holder.position = pos
 	holder.rotation.y = yaw
 	parent.add_child(holder)
 
-	var inst: Node = ps.instantiate()
-	var mat_emit := ForestMaterials.build_emissive_material(beam_color, 5.5)
-	for child in inst.get_children():
-		if str(child.name).begins_with("flood_lights_standing_double_a_"):
-			var dup: Node = child.duplicate()
-			if dup is Node3D:
-				# Re-center from showcase X = -2.0 back to X = 0.0
-				(dup as Node3D).position += Vector3(2.0, 0.0, 0.0)
-			if dup is MeshInstance3D and str(dup.name).contains("light_"):
-				var mi: MeshInstance3D = dup as MeshInstance3D
-				if mi.mesh != null and mi.mesh.get_surface_count() >= 2:
-					mi.set_surface_override_material(1, mat_emit)
-			holder.add_child(dup)
-	inst.free()
+	var stand_mesh: ArrayMesh = ForestMaterials.extract_gltf_kit_mesh(PROPS_BASE + "flood_lights/flood_lights.gltf", ["flood_lights_standing_double_c_*"], Vector3.ZERO, true, true, 0.0)
+	if stand_mesh != null:
+		var mi := MeshInstance3D.new()
+		mi.mesh = stand_mesh
+		holder.add_child(mi)
 
 	var spot := SpotLight3D.new()
 	spot.position = Vector3(0.0, 1.58, 0.08)
@@ -684,6 +699,8 @@ static func _place_gltf_prop(
 	n.position = pos
 	n.rotation = rot_rad
 	n.scale = sc
+	if path.contains("vintage_oil_lamp"):
+		_glow_oil_lamp(n, Color(1.0, 0.58, 0.16), 7.5)
 	parent.add_child(n)
 	return n
 
@@ -722,6 +739,22 @@ static func _make_lantern_glass_glow(lantern_node: Node, col: Color, energy: flo
 			(c as MeshInstance3D).material_override = mat
 
 
+static func _glow_oil_lamp(lantern_node: Node, col: Color, energy: float) -> void:
+	var flame_mat := ForestMaterials.build_emissive_material(col, energy)
+	var clear_glass := StandardMaterial3D.new()
+	clear_glass.albedo_color = Color(0.86, 0.90, 0.94, 0.24)
+	clear_glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	clear_glass.roughness = 0.08
+	clear_glass.metallic_specular = 0.92
+	for c in lantern_node.get_children():
+		_glow_oil_lamp(c, col, energy)
+		if c is MeshInstance3D:
+			if str(c.name).contains("flame"):
+				(c as MeshInstance3D).material_override = flame_mat
+			elif str(c.name).contains("glass"):
+				(c as MeshInstance3D).material_override = clear_glass
+
+
 static func _add_box_wall(parent: Node3D, pos: Vector3, size: Vector3, mat: Material, with_collider: bool) -> void:
 	var mi := _make_box_mesh(size, mat)
 	mi.position = pos
@@ -743,6 +776,7 @@ static func _make_box_mesh(size: Vector3, mat: Material) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	mi.mesh = bm
 	mi.material_override = mat
+	mi.gi_mode = GeometryInstance3D.GI_MODE_STATIC
 	return mi
 
 
@@ -755,6 +789,7 @@ static func _make_cylinder_mesh(radius: float, height: float, mat: Material) -> 
 	var mi := MeshInstance3D.new()
 	mi.mesh = cm
 	mi.material_override = mat
+	mi.gi_mode = GeometryInstance3D.GI_MODE_STATIC
 	return mi
 
 

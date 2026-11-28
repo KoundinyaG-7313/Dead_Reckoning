@@ -157,29 +157,28 @@ func _load_all_asset_variants() -> void:
 		if m != null:
 			_birch_meshes.append(m)
 
-	_fern_meshes = _extract_gltf_meshes(FOREST_BASE + "fern_02/fern_02.gltf", 0.86, false)
-	# Exclude shrub_02_c which has 45deg showcase tilt; a, b, d read best upright
-	_bush_meshes = _extract_gltf_meshes(FOREST_BASE + "shrub_02/shrub_02.gltf", 0.84, false, ["shrub_02_c"])
-	_low_shrub_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "shrub_01/shrub_01.gltf", 0.86, false))
-	_low_shrub_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "shrub_04/shrub_04.gltf", 0.86, false))
+	_fern_meshes = _extract_gltf_meshes(FOREST_BASE + "fern_02/fern_02.gltf", 0.86, false, [], true, true, 0.0, false)
+	_bush_meshes = _extract_gltf_meshes(FOREST_BASE + "shrub_02/shrub_02.gltf", 0.84, false, [], true, true, 0.0, true)
+	_low_shrub_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "shrub_01/shrub_01.gltf", 0.86, false, [], true, true, 0.0, false))
+	_low_shrub_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "shrub_04/shrub_04.gltf", 0.86, false, [], true, true, 0.0, false))
 
 	# Select dense rich mid/large/tall grass clumps (skip tiny_a..f single blades to maximize cover per instance)
-	_grass_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "grass_medium_01/grass_medium_01.gltf", 0.88, true, ["tiny_"]))
-	_grass_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "grass_medium_02/grass_medium_02.gltf", 0.88, true))
-	_moss_meshes = _extract_gltf_meshes(FOREST_BASE + "moss_01/moss_01.gltf", 0.88, true)
+	_grass_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "grass_medium_01/grass_medium_01.gltf", 0.88, true, ["tiny_"], true, true, 0.0, false))
+	_grass_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "grass_medium_02/grass_medium_02.gltf", 0.88, true, [], true, true, 0.0, false))
+	_moss_meshes = _extract_gltf_meshes(FOREST_BASE + "moss_01/moss_01.gltf", 0.88, true, [], true, true, 0.0, false)
 
-	_log_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "dead_tree_trunk/dead_tree_trunk.gltf", 0.86, false))
-	_log_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "dead_tree_trunk_02/dead_tree_trunk_02.gltf", 0.86, false))
-	_stump_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "tree_stump_01/tree_stump_01.gltf", 0.88, false))
-	_stump_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "tree_stump_02/tree_stump_02.gltf", 0.88, false))
-	_stump_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "single_root/single_root.gltf", 0.88, false))
-	_quiver_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "dead_quiver_trunk/dead_quiver_trunk.gltf", 0.86, false))
-	_quiver_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "quiver_tree_02/quiver_tree_02.gltf", 0.84, false))
-	_branch_meshes = _extract_gltf_meshes(FOREST_BASE + "dry_branches_medium_01/dry_branches_medium_01.gltf", 0.86, false)
-	_boulder_meshes = _extract_gltf_meshes(FOREST_BASE + "boulder_01/boulder_01.gltf", 0.90, false)
-	_rock_set_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "rock_moss_set_01/rock_moss_set_01.gltf", 0.92, false))
-	_rock_set_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "rock_moss_set_02/rock_moss_set_02.gltf", 0.92, false))
-	_pebble_meshes = _extract_gltf_meshes(FOREST_BASE + "rock_07/rock_07.gltf", 0.90, false)
+	_log_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "dead_tree_trunk/dead_tree_trunk.gltf", 0.86, false, [], true, true, 0.02, false))
+	_log_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "dead_tree_trunk_02/dead_tree_trunk_02.gltf", 0.86, false, [], true, true, 0.04, false))
+	_stump_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "tree_stump_01/tree_stump_01.gltf", 0.88, false, [], true, true, 0.0, false))
+	_stump_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "tree_stump_02/tree_stump_02.gltf", 0.88, false, [], true, true, 0.0, false))
+	_stump_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "single_root/single_root.gltf", 0.88, false, [], true, true, 0.0, false))
+	_quiver_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "dead_quiver_trunk/dead_quiver_trunk.gltf", 0.86, false, [], true, true, 0.0, false))
+	_quiver_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "quiver_tree_02/quiver_tree_02.gltf", 0.84, false, [], true, true, 0.0, false))
+	_branch_meshes = _extract_gltf_meshes(FOREST_BASE + "dry_branches_medium_01/dry_branches_medium_01.gltf", 0.86, false, [], true, true, 0.0, false)
+	_boulder_meshes = _extract_gltf_meshes(FOREST_BASE + "boulder_01/boulder_01.gltf", 0.90, false, [], true, true, 0.0, false)
+	_rock_set_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "rock_moss_set_01/rock_moss_set_01.gltf", 0.92, false, [], true, true, 0.0, false))
+	_rock_set_meshes.append_array(_extract_gltf_meshes(FOREST_BASE + "rock_moss_set_02/rock_moss_set_02.gltf", 0.92, false, [], true, true, 0.0, false))
+	_pebble_meshes = _extract_gltf_meshes(FOREST_BASE + "rock_07/rock_07.gltf", 0.90, false, [], true, true, 0.0, false)
 
 
 func _extract_quaternius_tree(path: String, kind: String) -> Mesh:
@@ -204,7 +203,11 @@ func _extract_gltf_meshes(
 	path: String,
 	night_darken: float,
 	force_alpha_scissor: bool,
-	skip_substrings: Array = []
+	skip_substrings: Array = [],
+	recenter_xz: bool = true,
+	ground_y: bool = true,
+	sink_y: float = 0.0,
+	bake_node_basis: bool = false
 ) -> Array[Mesh]:
 	var out: Array[Mesh] = []
 	var ps: PackedScene = load(path)
@@ -228,7 +231,10 @@ func _extract_gltf_meshes(
 					break
 			if skip:
 				continue
-			var dup: Mesh = mi.mesh.duplicate() as Mesh
+			var bake_xf := Transform3D(mi.transform.basis, Vector3.ZERO) if bake_node_basis else Transform3D.IDENTITY
+			var dup: Mesh = ForestMaterials.normalize_mesh_pivot(mi.mesh, recenter_xz, ground_y, sink_y, bake_xf)
+			if dup == null:
+				continue
 			for s in range(dup.get_surface_count()):
 				var mat: Material = mi.get_active_material(s)
 				if mat != null:

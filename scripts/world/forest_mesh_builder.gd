@@ -68,6 +68,7 @@ static func build_terrain(terrain: ForestTerrainData, parent: Node3D) -> void:
 	_bind_layer(smat, "floor", "forest_ground_04")
 	_bind_layer(smat, "mud", "brown_mud_02")
 	_bind_layer(smat, "leaf", "forest_leaves_04")
+	_bind_layer(smat, "rock", "mossy_rock")
 	smat.set_shader_parameter("uv_scale", 38.0)
 	smat.set_shader_parameter("detail_uv_scale", 12.0)
 
@@ -76,6 +77,7 @@ static func build_terrain(terrain: ForestTerrainData, parent: Node3D) -> void:
 	mi.mesh = arr_mesh
 	mi.material_override = smat
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	mi.gi_mode = GeometryInstance3D.GI_MODE_STATIC
 	parent.add_child(mi)
 	mi.create_trimesh_collision()
 
