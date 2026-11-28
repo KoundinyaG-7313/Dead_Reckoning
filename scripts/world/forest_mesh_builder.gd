@@ -107,7 +107,6 @@ static func _build_creek_water_ribbon(terrain: ForestTerrainData, parent: Node3D
 		var dz_dx: float = (terrain.get_creek_center_z(x + 0.5) - cz) / 0.5
 		var perp: Vector3 = Vector3(-dz_dx, 0.0, 1.0).normalized()
 
-		# Follow local creek channel bed grade so water stays recessed inside banks across gentle slopes
 		var bed_y: float = terrain.get_height(x, cz)
 		var local_y: float = maxf(water_y, bed_y + 0.42)
 		# Dampen extremes so it settles inside the cut channel

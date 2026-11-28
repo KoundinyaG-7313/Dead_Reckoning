@@ -113,7 +113,6 @@ func _build_atmosphere_and_lighting() -> void:
 	we.environment = env
 	add_child(we)
 
-	# Cold slate-blue moonlight slicing through treetops
 	var moon := DirectionalLight3D.new()
 	moon.name = "MoonlightKey"
 	moon.rotation_degrees = Vector3(-34.0, 128.0, 0.0)
@@ -126,7 +125,6 @@ func _build_atmosphere_and_lighting() -> void:
 	moon.directional_shadow_max_distance = 92.0
 	add_child(moon)
 
-	# Cool atmospheric bounce fill so trunks & ferns read clearly in shadowed hollows
 	var rim := DirectionalLight3D.new()
 	rim.name = "CanopySkyRim"
 	rim.rotation_degrees = Vector3(-48.0, -44.0, 0.0)
@@ -141,7 +139,6 @@ func _build_inspection_viewpoints() -> void:
 	vp_root.name = "CameraViewpoints"
 	add_child(vp_root)
 
-	# Main Static Atmospheric Camera (Trail approach looking through lanterns & bridge toward crimson tower glow)
 	var trail_z: float = 54.0
 	var trail_x: float = _terrain.get_trail_center_x(trail_z)
 	var trail_y: float = _terrain.get_height(trail_x, trail_z)
@@ -194,7 +191,6 @@ func _process(delta: float) -> void:
 		return
 	_elapsed += delta
 
-	# Crimson aviation beacon slow ominous sweep pulse
 	for b in _animated.get("beacons", []):
 		var pulse: float = pow(maxf(0.0, sin(_elapsed * 1.45)), 3.0)
 		var l: OmniLight3D = b["light"]
@@ -202,7 +198,6 @@ func _process(delta: float) -> void:
 		l.light_energy = lerpf(1.2, float(b["base"]), pulse)
 		mat.emission_energy_multiplier = lerpf(1.5, 9.5, pulse)
 
-	# Gentle breeze swaying lantern hooks along the muddy road
 	for sw in _animated.get("swaying_lanterns", []):
 		var n: Node3D = sw["node"]
 		var ph: float = float(sw["phase"])
@@ -211,7 +206,6 @@ func _process(delta: float) -> void:
 		n.rotation.z = sin(_elapsed * sp + ph) * am
 		n.rotation.x = cos(_elapsed * sp * 0.73 + ph) * am * 0.55
 
-	# Subtle organic flame/filament/spark variance (world ambiance only)
 	for fl in _animated.get("flicker_lights", []):
 		var l2: OmniLight3D = fl["light"]
 		var sp2: float = float(fl["speed"])
