@@ -45,18 +45,15 @@ static func _build_creek_bridge_and_signs(terrain: ForestTerrainData, parent: No
 	const BR_W: float = 3.8
 	const BR_L: float = 7.6
 
-	# Walkable weathered timber plank bridge deck (100% open at -Z and +Z ends!)
 	var main_deck := _make_box_mesh(Vector3(BR_W, 0.18, BR_L), mat_planks)
 	main_deck.position = Vector3(0.0, -0.09, 0.0)
 	bridge_root.add_child(main_deck)
 
-	# Heavy longitudinal under-beams supporting the deck
 	for x_beam in [-1.55, 0.0, 1.55]:
 		var beam := _make_box_mesh(Vector3(0.24, 0.28, BR_L + 0.4), mat_bark)
 		beam.position = Vector3(x_beam, -0.30, 0.0)
 		bridge_root.add_child(beam)
 
-	# Ground-anchored plank ramps extending from bridge deck lips cleanly into terrain mud (-0.18m embed)
 	for end_sign in [-1.0, 1.0]:
 		var local_lip := Vector3(0.0, 0.0, end_sign * (BR_L * 0.5))
 		var tip_world_approx: Vector3 = bridge_root.position + (Basis(Vector3.UP, bridge_root.rotation.y) * Vector3(0.0, 0.0, end_sign * (BR_L * 0.5 + 2.8)))
@@ -82,7 +79,6 @@ static func _build_creek_bridge_and_signs(terrain: ForestTerrainData, parent: No
 		ramp_body.add_child(ramp_col)
 		bridge_root.add_child(ramp_body)
 
-	# Side log curbs + waist-high open timber guardrails ONLY along left & right sides
 	for side_x in [-BR_W * 0.5 + 0.12, BR_W * 0.5 - 0.12]:
 		var curb := _make_box_mesh(Vector3(0.20, 0.16, BR_L), mat_bark)
 		curb.position = Vector3(side_x, 0.08, 0.0)
@@ -101,7 +97,6 @@ static func _build_creek_bridge_and_signs(terrain: ForestTerrainData, parent: No
 			rpost.position = Vector3(side_x, 0.52, pz)
 			bridge_root.add_child(rpost)
 
-		# Side railing collider
 		var rail_sb := StaticBody3D.new()
 		var rail_cs := CollisionShape3D.new()
 		var rail_bs := BoxShape3D.new()
@@ -111,14 +106,12 @@ static func _build_creek_bridge_and_signs(terrain: ForestTerrainData, parent: No
 		rail_sb.add_child(rail_cs)
 		bridge_root.add_child(rail_sb)
 
-	# Deep timber pilings driven 3.8m straight into the muddy creek ravine (zero floating!)
 	for x_side in [-1.68, 1.68]:
 		for z_pier in [-3.6, -1.2, 1.2, 3.6]:
 			var pier := _make_cylinder_mesh(0.16, 4.0, mat_bark)
 			pier.position = Vector3(x_side, -2.05, z_pier)
 			bridge_root.add_child(pier)
 
-	# Bridge static collider deck (flush with top plank surface at y = 0.0)
 	var deck_body := StaticBody3D.new()
 	var deck_col := CollisionShape3D.new()
 	var deck_box := BoxShape3D.new()
@@ -128,7 +121,6 @@ static func _build_creek_bridge_and_signs(terrain: ForestTerrainData, parent: No
 	deck_body.add_child(deck_col)
 	bridge_root.add_child(deck_body)
 
-	# Roadside wooden warning sign & split-rail fencing approaching creek
 	var sign_ps: PackedScene = load(KENNEY_BASE + "sign.glb")
 	if sign_ps != null:
 		var sx: float = terrain.get_trail_center_x(40.5) + 2.35
@@ -142,7 +134,6 @@ static func _build_creek_bridge_and_signs(terrain: ForestTerrainData, parent: No
 		_override_kenney_materials(snode, {"wood": mat_planks, "woodDark": mat_bark, "_defaultMat": mat_sign_stone})
 		parent.add_child(snode)
 
-	# Split-rail fence guards near the spur trail fork (z ~ 16)
 	var fence_ps: PackedScene = load(KENNEY_BASE + "fence_planks.glb")
 	if fence_ps != null:
 		for fz in [26.5, 29.5, 17.5]:
@@ -186,7 +177,6 @@ static func _build_utility_power_line(terrain: ForestTerrainData, parent: Node3D
 		pole.rotation.y = yaw
 
 		var h: float = 8.8
-		# Index 3 (near z=11.5) is splintered & tilting menacingly over the wet trail!
 		var is_broken: bool = (idx == 3)
 		if is_broken:
 			pole.rotation.z = -0.34
@@ -196,18 +186,15 @@ static func _build_utility_power_line(terrain: ForestTerrainData, parent: Node3D
 		shaft.position = Vector3(0.0, h * 0.5, 0.0)
 		pole.add_child(shaft)
 
-		# Timber crossarm near top
 		var arm := _make_box_mesh(Vector3(1.9, 0.14, 0.14), mat_arm)
 		arm.position = Vector3(0.0, h - 0.55, 0.0)
 		pole.add_child(arm)
 
-		# Diagonal steel braces + ceramic insulators
 		for s in [-0.78, 0.78]:
 			var ins := _make_cylinder_mesh(0.055, 0.14, mat_iron)
 			ins.position = Vector3(s, h - 0.42, 0.0)
 			pole.add_child(ins)
 
-		# Physical trunk collar collider
 		var pb := StaticBody3D.new()
 		var pc := CollisionShape3D.new()
 		var pshape := CylinderShape3D.new()
@@ -224,7 +211,6 @@ static func _build_utility_power_line(terrain: ForestTerrainData, parent: Node3D
 		pole_tops_l.append(xf * Vector3(-0.78, h - 0.36, 0.0))
 		pole_tops_r.append(xf * Vector3(0.78, h - 0.36, 0.0))
 
-		# Broken pole base gets darkened hazard drum & flickering utility flood beacon
 		if is_broken:
 			var hb := _place_gltf_prop(PROPS_BASE + "Barrel_01/Barrel_01.gltf", parent, "HazardBarrel_Pole3", Vector3(px + 1.2, terrain.get_height(px + 1.2, pz - 1.1) - 0.02, pz - 1.1), Vector3(0.0, 0.8, 0.12), Vector3.ONE * 1.15)
 			if hb != null:
@@ -240,10 +226,8 @@ static func _build_utility_power_line(terrain: ForestTerrainData, parent: Node3D
 			pole_parent.add_child(spark_lt)
 			animated["flicker_lights"].append({"light": spark_lt, "base": 1.35, "speed": 11.0, "phase": 1.3})
 
-			# Snapped cable curling down toward the muddy road verge
 			_add_catenary_cable(pole_parent, pole_tops_r[idx], Vector3(cable_end.x, cable_end.y - 0.42, cable_end.z), 0.75, 10, mat_cable)
 
-	# Connect intact overhead power lines between consecutive poles
 	for idx in range(z_stations.size() - 1):
 		if idx == 3:
 			# Right conductor snapped cleanly at pole 3; left still spans loosely with deep sag
@@ -331,7 +315,7 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 	mat_glass_dirty.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat_glass_dirty.roughness = 0.28
 
-	# === A. 29-METER STEEL LATTICE RADIO TOWER ===
+
 	var tower_pos := Vector3(ForestTerrainData.RELAY_CENTER.x + 5.2, 0.0, ForestTerrainData.RELAY_CENTER.y - 3.5)
 	tower_pos.y = terrain.get_height(tower_pos.x, tower_pos.z)
 	var tower := Node3D.new()
@@ -339,7 +323,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 	tower.position = tower_pos
 	out_root.add_child(tower)
 
-	# Concrete footings & equipment pad
 	var pad := _make_box_mesh(Vector3(4.2, 0.55, 4.2), mat_conc)
 	pad.position = Vector3(0.0, -0.05, 0.0)
 	tower.add_child(pad)
@@ -376,7 +359,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 			_add_strut(tower, p0, p1_n, 0.028, mat_steel)
 			_add_strut(tower, p0_n, p1, 0.028, mat_steel)
 
-	# Upper maintenance catwalk platform + handrails at h=19.7m & 26.2m
 	for plat_h in [19.7, 26.2]:
 		var pr: float = lerpf(base_half, top_half, (plat_h - 0.22) / tower_h) + 0.45
 		var deck := _make_box_mesh(Vector3(pr * 2.0, 0.1, pr * 2.0), mat_steel)
@@ -389,7 +371,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 			_add_strut(tower, rp0, rp1, 0.025, mat_steel)
 			_add_strut(tower, Vector3(rp0.x, plat_h, rp0.z), rp0, 0.025, mat_steel)
 
-	# Central pinnacle antenna needle + microwave drum + crimson aviation beacon
 	var spire := _make_cylinder_mesh(0.055, 4.2, mat_steel)
 	spire.position = Vector3(0.0, tower_h + 2.2, 0.0)
 	tower.add_child(spire)
@@ -422,7 +403,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 	tower.add_child(beacon_light)
 	animated["beacons"].append({"light": beacon_light, "mat": mat_beacon, "base": 10.5})
 
-	# Floodlight tripods at tower base piercing dark mist upward & toward trees
 	_place_standing_floodlight(
 		out_root,
 		Vector3(tower_pos.x - 2.3, tower_pos.y + 0.22, tower_pos.z + 2.4),
@@ -440,7 +420,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 		false
 	)
 
-	# === B. ABANDONED FORESTRY RELAY SHACK ===
 	var shack_pos := Vector3(ForestTerrainData.RELAY_CENTER.x - 4.2, 0.0, ForestTerrainData.RELAY_CENTER.y + 0.6)
 	shack_pos.y = terrain.get_height(shack_pos.x, shack_pos.z)
 	var shack := Node3D.new()
@@ -453,17 +432,14 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 	const D: float = 3.8
 	const H: float = 2.85
 
-	# Mossy concrete slab protruding out slightly as porch stoop
 	var slab := _make_box_mesh(Vector3(W + 0.7, 0.45, D + 1.1), mat_conc)
 	slab.position = Vector3(0.0, -0.1, 0.35)
 	shack.add_child(slab)
 
-	# Back & side walls extend to roof plate so no sky slivers show inside eaves
 	_add_box_wall(shack, Vector3(0.0, (H + 0.48) * 0.5, -D * 0.5), Vector3(W, H + 0.48, 0.16), mat_wood, true)
 	_add_box_wall(shack, Vector3(-W * 0.5, (H + 0.48) * 0.5, 0.0), Vector3(0.16, H + 0.48, D), mat_wood, true)
 	_add_box_wall(shack, Vector3(W * 0.5, (H + 0.48) * 0.5, 0.0), Vector3(0.16, H + 0.48, D), mat_wood, true)
 
-	# Front wall (+Z) built around an open doorway (left-center) and observation window (right)
 	_add_box_wall(shack, Vector3(-1.825, (H + 0.48) * 0.5, D * 0.5), Vector3(0.95, H + 0.48, 0.16), mat_wood, true) # far left pier
 	_add_box_wall(shack, Vector3(-0.80, 2.74, D * 0.5), Vector3(1.10, 1.18, 0.16), mat_wood, true) # header over door
 	_add_box_wall(shack, Vector3(0.10, (H + 0.48) * 0.5, D * 0.5), Vector3(0.70, H + 0.48, 0.16), mat_wood, true) # mid pier
@@ -471,7 +447,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 	_add_box_wall(shack, Vector3(1.10, 2.69, D * 0.5), Vector3(1.30, 1.28, 0.16), mat_wood, true) # window header
 	_add_box_wall(shack, Vector3(2.025, (H + 0.48) * 0.5, D * 0.5), Vector3(0.55, H + 0.48, 0.16), mat_wood, true) # right pier
 
-	# Grimy glass pane & wooden bars in window
 	var pane := _make_box_mesh(Vector3(1.25, 0.98, 0.03), mat_glass_dirty)
 	pane.position = Vector3(1.10, 1.55, D * 0.5)
 	shack.add_child(pane)
@@ -479,7 +454,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 	mullion.position = Vector3(1.10, 1.55, D * 0.5)
 	shack.add_child(mullion)
 
-	# Heavy timber door swung ajar 42 degrees outward!
 	var door_hinge := Node3D.new()
 	door_hinge.position = Vector3(-1.33, 0.12, D * 0.5 + 0.06)
 	door_hinge.rotation.y = -0.82
@@ -488,7 +462,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 	door_leaf.position = Vector3(0.52, 1.04, 0.0)
 	door_hinge.add_child(door_leaf)
 
-	# Corner trim posts + front porch awning posts
 	for cx in [-W * 0.5, W * 0.5]:
 		for cz in [-D * 0.5, D * 0.5]:
 			var corner := _make_box_mesh(Vector3(0.20, H, 0.20), mat_trim)
@@ -499,7 +472,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 		ppost.position = Vector3(px, 1.38, D * 0.5 + 0.78)
 		shack.add_child(ppost)
 
-	# Sloped corrugated tin shed roof with extended porch eave & rusty chimney pipe
 	var roof := _make_box_mesh(Vector3(W + 0.85, 0.10, D + 1.55), mat_roof)
 	roof.position = Vector3(0.0, H + 0.18, 0.25)
 	roof.rotation.x = 0.14
@@ -509,7 +481,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 	chimney.position = Vector3(-1.4, H + 0.85, -1.1)
 	shack.add_child(chimney)
 
-	# Interior Desk, Chair, Cassette Deck, Ammo Box, Hanging Caged Light, Crowbar!
 	_place_gltf_prop(PROPS_BASE + "WoodenTable_01/WoodenTable_01.gltf", shack, "OperatorDesk", Vector3(0.95, 0.12, 0.10), Vector3(0.0, 0.05, 0.0), Vector3.ONE * 1.22)
 	var desk_top_y: float = 0.79
 	_place_gltf_prop(PROPS_BASE + "cassette_player/cassette_player.gltf", shack, "SignalRecorderDeck", Vector3(0.85, desk_top_y, 0.15), Vector3(0.0, 0.42, 0.0), Vector3.ONE * 1.45)
@@ -517,7 +488,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 	_place_gltf_prop(PROPS_BASE + "WoodenChair_01/WoodenChair_01.gltf", shack, "OperatorChair", Vector3(0.85, 0.12, -0.55), Vector3(0.0, 0.25, 0.0), Vector3.ONE * 0.44)
 	_place_gltf_prop(PROPS_BASE + "crowbar_01/crowbar_01.gltf", shack, "PriedDoorCrowbar", Vector3(-0.24, 0.42, D * 0.5 - 0.18), Vector3(0.16, 0.25, -0.22), Vector3.ONE * 1.25)
 
-	# Caged hanging bulb centered in interior rafters casting warm grim tungsten wash out the doorway!
 	var cage_ps: PackedScene = load(PROPS_BASE + "caged_hanging_light/caged_hanging_light.gltf")
 	if cage_ps != null:
 		var cage: Node3D = cage_ps.instantiate() as Node3D
@@ -535,7 +505,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 	shack.add_child(shack_bulb)
 	animated["flicker_lights"].append({"light": shack_bulb, "base": 3.2, "speed": 4.2, "phase": 0.6})
 
-	# Porch storm lantern hanging beside doorway
 	var l_ps: PackedScene = load(PROPS_BASE + "Lantern_01/Lantern_01.gltf")
 	if l_ps != null:
 		var porch_hook := Node3D.new()
@@ -548,7 +517,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 		porch_hook.add_child(pl)
 		animated["swaying_lanterns"].append({"node": porch_hook, "speed": 1.35, "amp": 0.055, "phase": 2.9})
 
-	# Outdoor outpost drums & firewood mounted cleanly relative to shack exterior walls
 	var ob1 := _place_gltf_prop(PROPS_BASE + "Barrel_01/Barrel_01.gltf", shack, "OutpostFuelDrum_A", Vector3(-W * 0.5 - 0.55, 0.12, -0.65), Vector3(0.0, 0.9, 0.0), Vector3.ONE * 1.15)
 	if ob1 != null:
 		_tint_gltf_prop(ob1, 0.45)
@@ -562,7 +530,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 		_override_kenney_materials(ls_node, {"woodBark": mat_trim, "woodInner": mat_wood, "woodDark": mat_trim})
 		shack.add_child(ls_node)
 
-	# Perimeter clearing split-rail fence & outpost warning sign along clearing rim
 	var fence_ps: PackedScene = load(KENNEY_BASE + "fence_planks.glb")
 	if fence_ps != null:
 		for f_idx in range(4):
@@ -575,7 +542,6 @@ static func _build_relay_outpost(terrain: ForestTerrainData, parent: Node3D, ani
 			_override_kenney_materials(fn, {"wood": mat_wood})
 			out_root.add_child(fn)
 
-	# Heavy cable feeder line draping between shack roof & tower junction box
 	_add_catenary_cable(out_root, shack_pos + Vector3(1.8, 2.75, 0.2), tower_pos + Vector3(-1.35, 2.4, 0.2), 0.55, 10, ForestMaterials.build_dark_metal_material(Color(0.04, 0.04, 0.05), 0.8, 0.3))
 
 
@@ -591,7 +557,6 @@ static func _build_abandoned_campsite(terrain: ForestTerrainData, parent: Node3D
 	var mat_stone: StandardMaterial3D = ForestMaterials.load_pbr_material("concrete_moss", Vector2(1.0, 1.0), Color(0.45, 0.45, 0.45))
 	var mat_char_wood: StandardMaterial3D = ForestMaterials.load_pbr_material("knotted_pine_bark", Vector2(1.0, 1.0), Color(0.24, 0.21, 0.20))
 
-	# Weathered Open Tent
 	var tent_ps: PackedScene = load(KENNEY_BASE + "tent_smallOpen.glb")
 	if tent_ps != null:
 		var tent: Node3D = tent_ps.instantiate() as Node3D
@@ -603,7 +568,6 @@ static func _build_abandoned_campsite(terrain: ForestTerrainData, parent: Node3D
 		_override_kenney_materials(tent, {"colorRed": mat_tent_canvas, "colorRedDark": mat_tent_dark, "wood": mat_char_wood})
 		camp.add_child(tent)
 
-	# Dying Fire Pit (stones + logs + faint crimson ember point light)
 	var stones_ps: PackedScene = load(KENNEY_BASE + "campfire_stones.glb")
 	var logs_ps: PackedScene = load(KENNEY_BASE + "campfire_logs.glb")
 	if stones_ps != null:
@@ -629,7 +593,6 @@ static func _build_abandoned_campsite(terrain: ForestTerrainData, parent: Node3D
 	camp.add_child(ember_lt)
 	animated["flicker_lights"].append({"light": ember_lt, "base": 1.25, "speed": 3.8, "phase": 4.2})
 
-	# Abandoned lantern + rusted barrel beside campsite
 	var lantern_ps: PackedScene = load(PROPS_BASE + "Lantern_01/Lantern_01.gltf")
 	if lantern_ps != null:
 		var cl: Node3D = lantern_ps.instantiate() as Node3D
@@ -643,7 +606,6 @@ static func _build_abandoned_campsite(terrain: ForestTerrainData, parent: Node3D
 
 	_place_gltf_prop(PROPS_BASE + "barrel_03/barrel_03.gltf", camp, "CampDrum", Vector3(c.x - 2.9, terrain.get_height(c.x - 2.9, c.y - 1.5), c.y - 1.5), Vector3(0.0, 0.4, 0.0), Vector3.ONE * 1.12)
 
-	# Camp log stack bench placed cleanly beside firepit (not blocking camera line of sight)
 	var log_bench_ps: PackedScene = load(KENNEY_BASE + "log_stackLarge.glb")
 	if log_bench_ps != null:
 		var lb: Node3D = log_bench_ps.instantiate() as Node3D
@@ -657,7 +619,6 @@ static func _build_abandoned_campsite(terrain: ForestTerrainData, parent: Node3D
 		_override_kenney_materials(lb, {"woodBark": mat_bark_camp, "woodInner": mat_wb, "woodDark": mat_bark_camp})
 		camp.add_child(lb)
 
-	# Overgrown mossy stump & ferns framing the outer campsite perimeter away from firepit ashes
 	_place_gltf_prop("res://assets/models/forest/fern_02/fern_02.gltf", camp, "CampOvergrowth_A", Vector3(c.x - 3.9, terrain.get_height(c.x - 3.9, c.y - 0.8), c.y - 0.8), Vector3(0.0, 1.2, 0.0), Vector3.ONE * 1.4)
 	_place_gltf_prop("res://assets/models/forest/tree_stump_01/tree_stump_01.gltf", camp, "CampStump", Vector3(c.x + 3.2, terrain.get_height(c.x + 3.2, c.y - 0.2) - 0.12, c.y - 0.2), Vector3(0.0, 0.7, 0.0), Vector3.ONE * 1.15)
 
